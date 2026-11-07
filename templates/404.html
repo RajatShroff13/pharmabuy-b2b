@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Page not found — PharmaBuy B2B{% endblock %}
+{% block meta_description %}The page you requested does not exist in the PharmaBuy B2B portal.{% endblock %}
+
+{% block content %}
+<div class="container mb-5">
+    <div class="card">
+        <div class="card-body empty-state">
+            <i class="fas fa-compass"></i>
+            <h5 class="mb-1">Page not found</h5>
+            <p class="mb-3">The page you were looking for has moved or never existed.</p>
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-house me-2"></i>Back to dashboard
+                </a>
+                <a href="{{ url_for('medicines') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-pills me-2"></i>Browse medicines
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

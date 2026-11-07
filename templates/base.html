@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {# ---------------------------- SEO ---------------------------- #}
+    <title>{% block title %}PharmaBuy B2B — Pharmaceutical Distribution Portal{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}PharmaBuy B2B is a pharmaceutical distribution portal for pharmacies and clinics: browse medicine batches, manage a cart, place GST-ready orders and track inventory.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}pharmacy management system, pharmaceutical distribution, B2B pharmacy, medicine inventory, GST billing, Flask SQL Server project{% endblock %}">
+    <meta name="author" content="PharmaBuy B2B">
+    <meta name="robots" content="{% block robots %}noindex, nofollow{% endblock %}">
+    <link rel="canonical" href="{{ request.url }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PharmaBuy B2B">
+    <meta property="og:title" content="{% block og_title %}PharmaBuy B2B — Pharmaceutical Distribution Portal{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Order medicines in bulk, track batches and expiry, and run your pharmacy counter from one portal.{% endblock %}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:image" content="{{ url_for('static', filename='img/social-preview.png', _external=True) }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ self.og_title() }}">
+    <meta name="twitter:description" content="{{ self.og_description() }}">
+    <meta name="twitter:image" content="{{ url_for('static', filename='img/social-preview.png', _external=True) }}">
+    <meta name="theme-color" content="#0b2438">
+
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+{% if session.user_id %}
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <span class="brand-mark"><i class="fas fa-capsules"></i></span>
+            <span>Pharma<span class="brand-accent">Buy</span></span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                {% if session.role in ['ADMIN', 'MANAGER', 'PHARMACIST', 'CASHIER'] %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+                        <i class="fas fa-gauge-high me-1"></i>Dashboard
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint in ['medicines', 'medicine_detail'] %}active{% endif %}" href="{{ url_for('medicines') }}">
+                        <i class="fas fa-pills me-1"></i>Medicines
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint in ['orders', 'order_detail', 'order_confirmation'] %}active{% endif %}" href="{{ url_for('orders') }}">
+                        <i class="fas fa-clipboard-list me-1"></i>Orders
+                    </a>
+                </li>
+                {% if session.role in ['ADMIN', 'MANAGER'] %}
+                <li class="nav-item">
+                    <a class="nav-link {% if request.endpoint in ['admin_panel', 'revenue_report', 'db_explorer'] %}active{% endif %}" href="{{ url_for('admin_panel') }}">
+                        <i class="fas fa-sliders me-1"></i>Admin
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+
+            <ul class="navbar-nav align-items-lg-center gap-lg-2">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('cart') }}">
+                        <i class="fas fa-cart-shopping me-1"></i>Cart
+                        {% if session.get('cart') %}<span class="badge-cart">{{ session.cart|length }}</span>{% endif %}
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="user-chip">
+                            <span class="avatar">{{ session.username[0]|upper }}</span>
+                            {{ session.username }}
+                            <span class="role-pill">{{ session.role }}</span>
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{{ url_for('orders') }}"><i class="fas fa-receipt me-2"></i>My orders</a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('cart') }}"><i class="fas fa-cart-shopping me-2"></i>Cart</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fas fa-arrow-right-from-bracket me-2"></i>Log out</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endif %}
+
+<main id="main">
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }} alert-dismissible fade show d-flex align-items-center" role="alert">
+                <i class="fas fa-{{ 'circle-exclamation' if category == 'danger' else 'circle-check' if category == 'success' else 'triangle-exclamation' if category == 'warning' else 'circle-info' }} me-2"></i>
+                <div>{{ message }}</div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="footer-brand">
+                    <span class="brand-mark"><i class="fas fa-capsules"></i></span>
+                    <span>Pharma<span class="brand-accent">Buy</span> B2B</span>
+                </div>
+                <p class="mb-2">A pharmaceutical distribution portal for pharmacies and clinics — GST-aware
+                    checkout, batch and expiry tracking, revenue analytics and a live database explorer.</p>
+                <p class="mb-0" style="font-size:0.78rem;">
+                    Built with Flask, Microsoft SQL Server and Bootstrap 5.
+                </p>
+            </div>
+            <div class="col-6 col-lg-3">
+                <h6>Portal</h6>
+                <a href="{{ url_for('medicines') }}">Medicine catalog</a>
+                <a href="{{ url_for('cart') }}">Cart</a>
+                <a href="{{ url_for('orders') }}">Order history</a>
+                {% if session.role in ['ADMIN', 'MANAGER'] %}
+                <a href="{{ url_for('admin_panel') }}">Admin panel</a>
+                {% endif %}
+            </div>
+            <div class="col-6 col-lg-4">
+                <h6>Account</h6>
+                {% if session.user_id %}
+                <a href="{{ url_for('logout') }}">Log out</a>
+                <span class="d-block pt-1" style="font-size:0.78rem;">
+                    Signed in as <strong class="text-white">{{ session.username }}</strong>
+                </span>
+                {% else %}
+                <a href="{{ url_for('login') }}">Log in</a>
+                <a href="{{ url_for('register') }}">Create an account</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="footer-bottom d-flex flex-wrap justify-content-between gap-2">
+            <span>&copy; {{ current_year }} PharmaBuy B2B. All rights reserved.</span>
+            <span>Academic DBMS project &mdash; demo data, not for clinical use.</span>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

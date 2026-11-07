@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% block title %}Revenue Report - PharmaBuy B2B{% endblock %}
+
+{% block content %}
+<div class="container mb-5">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold text-primary mb-0"><i class="fas fa-chart-line me-2"></i>Revenue Report</h3>
+            <p class="text-muted mb-0 small">Sales analytics and financial overview</p>
+        </div>
+        <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i>Back to Admin
+        </a>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card mb-4" style="border-left: 4px solid #3498db;">
+        <div class="card-body py-3">
+            <form method="GET" action="{{ url_for('revenue_report') }}" class="row g-2 align-items-end">
+                <div class="col-auto">
+                    <label class="form-label small fw-bold text-muted mb-1">View By</label>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('revenue_report', mode='total') }}"
+                           class="btn btn-sm {% if mode == 'total' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Total
+                        </a>
+                        <a href="#" id="btn-monthly"
+                           class="btn btn-sm {% if mode == 'monthly' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Monthly
+                        </a>
+                        <a href="#" id="btn-yearly"
+                           class="btn btn-sm {% if mode == 'yearly' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                            Yearly
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Monthly picker -->
+                <div class="col-auto" id="monthly-picker" style="display:{% if mode == 'monthly' %}block{% else %}none{% endif %}">
+                    <label class="form-label small fw-bold text-muted mb-1">Select Month</label>
+                    <div class="input-group input-group-sm">
+                        <input type="month" name="month" class="form-control"
+                               value="{{ month }}" id="month-input">
+                        <input type="hidden" name="mode" value="monthly" id="mode-monthly">
+                        <button class="btn btn-primary" type="submit">Go</button>
+                    </div>
+                </div>
+
+                <!-- Yearly picker -->
+                <div class="col-auto" id="yearly-picker" style="display:{% if mode == 'yearly' %}block{% else %}none{% endif %}">
+                    <label class="form-label small fw-bold text-muted mb-1">Select Year</label>
+                    <div class="input-group input-group-sm">
+                        <select name="year" class="form-select">
+                            {% for y in available_years %}
+                            <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="mode" value="yearly">
+                        <button class="btn btn-primary" type="submit">Go</button>
+                    </div>
+                </div>
+
+                {% if mode != 'total' %}
+                <div class="col-auto">
+                    <label class="form-label small d-block mb-1">&nbsp;</label>
+                    <a href="{{ url_for('revenue_report') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Clear
+                    </a>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Active filter badge -->
+    {% if mode == 'monthly' and month %}
+    <div class="alert alert-info py-2 mb-4">
+        <i class="fas fa-filter me-2"></i>Showing data for <strong>{{ month }}</strong>
+    </div>
+    {% elif mode == 'yearly' and year %}
+    <div class="alert alert-info py-2 mb-4">
+        <i class="fas fa-filter me-2"></i>Showing data for year <strong>{{ year }}</strong>
+    </div>
+    {% endif %}
+
+    <!-- KPI Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card text-center h-100" style="border-top: 4px solid #f39c12;">
+                <div class="card-body py-4">
+                    <div style="font-size:2rem; color:#f39c12;"><i class="fas fa-rupee-sign"></i></div>
+                    <div class="fs-2 fw-bold mt-1">₹{{ "{:,.0f}".format(total_revenue) }}</div>
+                    <div class="text-muted small">Total Revenue</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center h-100" style="border-top: 4px solid #3498db;">
+                <div class="card-body py-4">
+                    <div style="font-size:2rem; color:#3498db;"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="fs-2 fw-bold mt-1">{{ total_orders }}</div>
+                    <div class="text-muted small">Total Orders</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center h-100" style="border-top: 4px solid #2ecc71;">
+                <div class="card-body py-4">
+                    <div style="font-size:2rem; color:#2ecc71;"><i class="fas fa-receipt"></i></div>
+                    <div class="fs-2 fw-bold mt-1">₹{{ "{:,.0f}".format(avg_order_value) }}</div>
+                    <div class="text-muted small">Avg Order Value</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center h-100" style="border-top: 4px solid #9b59b6;">
+                <div class="card-body py-4">
+                    <div style="font-size:2rem; color:#9b59b6;"><i class="fas fa-users"></i></div>
+                    <div class="fs-2 fw-bold mt-1">{{ unique_customers }}</div>
+                    <div class="text-muted small">Unique Customers</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Trend Chart -->
+    <div class="card mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-bold text-primary">
+                <i class="fas fa-chart-area me-2"></i>Revenue Trend
+                <span class="text-muted fw-normal small ms-2">by {{ trend_label }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if trend_labels %}
+            <canvas id="trendChart" height="100"></canvas>
+            {% else %}
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-chart-area fa-2x mb-2 d-block"></i>No trend data for this period.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Payment Mode + Category Charts -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-5">
+            <div class="card h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="fas fa-credit-card me-2"></i>Revenue by Payment Mode
+                    </h5>
+                </div>
+                <div class="card-body d-flex align-items-center justify-content-center">
+                    {% if payment_labels %}
+                    <canvas id="paymentChart" style="max-height:260px;"></canvas>
+                    {% else %}
+                    <p class="text-muted">No data.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-primary">
+                        <i class="fas fa-tags me-2"></i>Revenue by Category
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if cat_labels %}
+                    <canvas id="categoryChart" height="140"></canvas>
+                    {% else %}
+                    <p class="text-muted">No data.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Medicines + Top Customers -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold" style="color:#e74c3c;">
+                        <i class="fas fa-fire me-2"></i>Top 5 Medicines by Revenue
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if top_medicines %}
+                    <table class="table table-hover mb-0">
+                        <thead style="background:#fff5f5;">
+                            <tr>
+                                <th class="ps-4">#</th>
+                                <th>Medicine</th>
+                                <th>Units Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for med in top_medicines %}
+                            <tr>
+                                <td class="ps-4 text-muted">{{ loop.index }}</td>
+                                <td class="fw-semibold">{{ med[0] }}</td>
+                                <td>{{ med[1] }}</td>
+                                <td class="fw-bold text-success">₹{{ "{:,.0f}".format(med[2]) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">No data for this period.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold" style="color:#2980b9;">
+                        <i class="fas fa-crown me-2"></i>Top 5 Customers by Spend
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if top_customers %}
+                    <table class="table table-hover mb-0">
+                        <thead style="background:#f0f8ff;">
+                            <tr>
+                                <th class="ps-4">#</th>
+                                <th>Customer</th>
+                                <th>Orders</th>
+                                <th>Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cust in top_customers %}
+                            <tr>
+                                <td class="ps-4 text-muted">{{ loop.index }}</td>
+                                <td class="fw-semibold">{{ cust[0] }}</td>
+                                <td>{{ cust[1] }}</td>
+                                <td class="fw-bold text-primary">₹{{ "{:,.0f}".format(cust[2]) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">No data for this period.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const trendLabels   = {{ trend_labels | tojson }};
+const trendValues   = {{ trend_values | tojson }};
+const payLabels     = {{ payment_labels | tojson }};
+const payValues     = {{ payment_values | tojson }};
+const catLabels     = {{ cat_labels | tojson }};
+const catValues     = {{ cat_values | tojson }};
+
+// --- Trend Line Chart ---
+if (trendLabels.length > 0) {
+    new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'Revenue (₹)',
+                data: trendValues,
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52,152,219,0.12)',
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#3498db',
+                pointRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: v => '₹' + v.toLocaleString('en-IN')
+                    }
+                }
+            }
+        }
+    });
+}
+
+// --- Payment Doughnut Chart ---
+if (payLabels.length > 0) {
+    new Chart(document.getElementById('paymentChart'), {
+        type: 'doughnut',
+        data: {
+            labels: payLabels,
+            datasets: [{
+                data: payValues,
+                backgroundColor: ['#3498db','#2ecc71','#f39c12','#9b59b6','#e74c3c'],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ' ₹' + ctx.parsed.toLocaleString('en-IN')
+                    }
+                }
+            }
+        }
+    });
+}
+
+// --- Category Bar Chart ---
+if (catLabels.length > 0) {
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'bar',
+        data: {
+            labels: catLabels,
+            datasets: [{
+                label: 'Revenue (₹)',
+                data: catValues,
+                backgroundColor: [
+                    '#3498db','#2ecc71','#f39c12','#9b59b6',
+                    '#e74c3c','#1abc9c','#e67e22','#34495e'
+                ],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    ticks: { callback: v => '₹' + v.toLocaleString('en-IN') }
+                }
+            }
+        }
+    });
+}
+
+// --- Filter toggle buttons ---
+document.getElementById('btn-monthly').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('monthly-picker').style.display = 'block';
+    document.getElementById('yearly-picker').style.display  = 'none';
+    document.getElementById('mode-monthly').value = 'monthly';
+});
+document.getElementById('btn-yearly').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('yearly-picker').style.display  = 'block';
+    document.getElementById('monthly-picker').style.display = 'none';
+});
+</script>
+{% endblock %}

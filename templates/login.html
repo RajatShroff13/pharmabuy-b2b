@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log in — PharmaBuy B2B Pharmaceutical Distribution Portal</title>
+    <meta name="description" content="Sign in to PharmaBuy B2B to browse medicine batches, place GST-ready pharmacy orders, track stock and expiry, and view revenue reports.">
+    <meta name="keywords" content="pharmacy login, pharmaceutical distribution portal, B2B medicine ordering, PharmaBuy">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ request.url }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="PharmaBuy B2B">
+    <meta property="og:title" content="Log in — PharmaBuy B2B">
+    <meta property="og:description" content="Sign in to the PharmaBuy B2B pharmaceutical distribution portal.">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta name="theme-color" content="#0b2438">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+</head>
+<body>
+<div class="auth-shell">
+    <aside class="auth-aside">
+        <div class="footer-brand" style="font-size:1.15rem;">
+            <span class="brand-mark"><i class="fas fa-capsules"></i></span>
+            PharmaBuy B2B
+        </div>
+
+        <div>
+            <h1>Pharmaceutical distribution, without the paperwork.</h1>
+            <p class="mt-3">One portal for your pharmacy counter: live batch stock, expiry-aware ordering,
+                GST-calculated invoices and revenue reporting.</p>
+            <ul class="auth-features">
+                <li><i class="fas fa-circle-check"></i><span>Search 290+ medicines across 10 therapeutic categories</span></li>
+                <li><i class="fas fa-circle-check"></i><span>Batch-level pricing that always respects expiry dates</span></li>
+                <li><i class="fas fa-circle-check"></i><span>Stock alerts under 20 units, logged on every sale</span></li>
+                <li><i class="fas fa-circle-check"></i><span>Role-aware access for admin, manager, pharmacist and cashier</span></li>
+            </ul>
+        </div>
+
+        <p class="mb-0" style="font-size:0.78rem; color:rgba(255,255,255,0.45);">
+            Academic database management project &mdash; demo data only.
+        </p>
+    </aside>
+
+    <div class="auth-main">
+        <div class="auth-card">
+            <h2>Welcome back</h2>
+            <p class="auth-sub">Sign in to continue to your dashboard.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' if category == 'success' else 'warning' if category == 'warning' else 'info' }}" role="alert">
+                    <i class="fas fa-{{ 'circle-exclamation' if category == 'danger' else 'circle-check' if category == 'success' else 'circle-info' }} me-2"></i>{{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="credentials-hint">
+                <strong><i class="fas fa-key me-1"></i> Demo credentials</strong>
+                <div class="cred-row"><span>Admin</span><code>admin / admin123</code></div>
+                <div class="cred-row"><span>Manager</span><code>manager1 / manager123</code></div>
+                <div class="cred-row"><span>Pharmacist</span><code>pharmacist1 / pharma123</code></div>
+            </div>
+
+            <form method="POST" action="{{ url_for('login') }}" novalidate>
+                <div class="mb-3">
+                    <label class="form-label" for="username">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                        <input type="text" id="username" name="username" class="form-control"
+                               placeholder="Enter username" autocomplete="username" required autofocus>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label" for="password">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                        <input type="password" id="password" name="password" class="form-control"
+                               placeholder="Enter password" autocomplete="current-password" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success w-100 py-2">
+                    <i class="fas fa-arrow-right-to-bracket me-2"></i>Sign in
+                </button>
+            </form>
+
+            <div class="auth-switch">
+                New customer? <a href="{{ url_for('register') }}">Create an account</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

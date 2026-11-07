@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — PharmaBuy B2B{% endblock %}
+{% block meta_description %}Staff dashboard for the PharmaBuy B2B portal: inventory totals, order counts and low-stock alerts.{% endblock %}
+
+{% block content %}
+<div class="container mb-5">
+
+    <!-- Welcome banner -->
+    <div class="hero-panel mb-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h4><i class="fas fa-hand-sparkles me-2"></i>Welcome back, {{ session.username }}</h4>
+                <p>
+                    Signed in as <strong style="color:#fff;">{{ session.role|title }}</strong>
+                    &bull; {{ now.strftime('%d %B %Y') }}
+                </p>
+            </div>
+            <div class="position-relative" style="font-size:2.6rem; opacity:0.28;">
+                <i class="fas fa-capsules"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key figures -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="icon-chip is-brand"><i class="fas fa-pills"></i></div>
+                    <div class="stat-value">{{ total_medicines }}</div>
+                    <div class="stat-label">Medicines</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="icon-chip is-green"><i class="fas fa-tags"></i></div>
+                    <div class="stat-value">{{ total_categories }}</div>
+                    <div class="stat-label">Categories</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="icon-chip is-violet"><i class="fas fa-bag-shopping"></i></div>
+                    <div class="stat-value">{{ total_orders }}</div>
+                    <div class="stat-label">Orders placed</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="icon-chip is-red"><i class="fas fa-triangle-exclamation"></i></div>
+                    <div class="stat-value">{{ low_stock }}</div>
+                    <div class="stat-label">Low-stock batches</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-bolt me-2 text-success"></i>Quick actions</span>
+        </div>
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('medicines') }}" class="btn btn-primary">
+                    <i class="fas fa-magnifying-glass me-2"></i>Browse medicines
+                </a>
+                <a href="{{ url_for('cart') }}" class="btn btn-success">
+                    <i class="fas fa-cart-shopping me-2"></i>View cart
+                </a>
+                <a href="{{ url_for('orders') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-clipboard-list me-2"></i>Order history
+                </a>
+                {% if session.role in ['ADMIN', 'MANAGER'] %}
+                <a href="{{ url_for('admin_panel') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-sliders me-2"></i>Admin panel
+                </a>
+                <a href="{{ url_for('revenue_report') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-chart-line me-2"></i>Revenue report
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recently added medicines -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="card-title"><i class="fas fa-clock-rotate-left me-2 text-success"></i>New stock arrivals</span>
+            <a href="{{ url_for('medicines') }}" class="btn btn-sm btn-outline-primary">View all</a>
+        </div>
+        <div class="card-body p-0">
+            {% if recent_medicines %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Medicine</th>
+                            <th>Brand</th>
+                            <th>Category</th>
+                            <th class="text-end">MRP</th>
+                            <th class="text-end">Selling price</th>
+                            <th>Stock</th>
+                            <th class="text-end pe-4">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for med in recent_medicines %}
+                        <tr>
+                            <td class="ps-4 fw-semibold">{{ med[1] }}</td>
+                            <td class="text-muted">{{ med[2] or '—' }}</td>
+                            <td><span class="category-badge">{{ med[3] }}</span></td>
+                            <td class="text-end">₹{{ "%.2f"|format(med[4]) }}</td>
+                            <td class="text-end text-success fw-semibold">
+                                {{ '₹' ~ "%.2f"|format(med[6]) if med[6] else '—' }}
+                            </td>
+                            <td>
+                                {% if med[5] and med[5] > 50 %}
+                                    <span class="badge bg-success">{{ med[5] }} units</span>
+                                {% elif med[5] and med[5] > 0 %}
+                                    <span class="badge bg-warning text-dark">{{ med[5] }} units</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Out of stock</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="{{ url_for('medicine_detail', medicine_id=med[0]) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye me-1"></i>View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-pills"></i>
+                <h5>Nothing in stock yet</h5>
+                <p class="mb-0">Load the sample dataset to populate the catalog.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

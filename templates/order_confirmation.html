@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Order Confirmed - PharmaBuy B2B{% endblock %}
+
+{% block content %}
+<div class="container mb-5">
+    {% if order %}
+    <!-- Success Banner -->
+    <div class="card mb-4 border-0" style="background: linear-gradient(135deg, #2ecc71, #27ae60); color:#fff; border-radius: 16px;">
+        <div class="card-body text-center py-5">
+            <div style="font-size:4rem; margin-bottom: 15px;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2 class="fw-bold mb-1">Order Placed Successfully!</h2>
+            <p class="mb-0 opacity-85" style="font-size:1.1rem;">
+                Order #{{ order[0] }} has been confirmed
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Order Details -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-primary"><i class="fas fa-info-circle me-2"></i>Order Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted fw-semibold" style="width:40%;">Order ID</td>
+                            <td class="fw-bold">#{{ order[0] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Date</td>
+                            <td>{{ order[1].strftime('%d %B %Y') if order[1] else '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Customer</td>
+                            <td class="fw-semibold">{{ order[3] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Phone</td>
+                            <td>{{ order[4] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Address</td>
+                            <td>{{ order[5] }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Payment</td>
+                            <td>
+                                <span class="badge" style="background:#e8f4fd; color:#1a3c5e;">
+                                    {{ order[6] or 'N/A' }}
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted fw-semibold">Total Amount</td>
+                            <td class="fw-bold fs-5" style="color:#2ecc71;">₹{{ "%.2f"|format(order[2]) }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-primary"><i class="fas fa-list me-2"></i>Items Ordered</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if items %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead style="background:#f4f7fb;">
+                                <tr>
+                                    <th class="ps-3">Medicine</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end pe-3">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-semibold">{{ item[0] }}</div>
+                                        <div class="text-muted small">{{ item[1] or '' }} &bull; Batch: {{ item[2] }}</div>
+                                    </td>
+                                    <td class="text-center">{{ item[3] }}</td>
+                                    <td class="text-end pe-3 fw-semibold">₹{{ "%.2f"|format(item[5]) }}</td>
+                                </tr>
+                                {% endfor %}
+                                <tr style="background:#f8fff8;">
+                                    <td colspan="2" class="text-end fw-bold ps-3">Grand Total:</td>
+                                    <td class="text-end pe-3 fw-bold" style="color:#2ecc71;">₹{{ "%.2f"|format(order[2]) }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">No items found.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex flex-wrap gap-3 mt-4 justify-content-center">
+        <a href="{{ url_for('orders') }}" class="btn btn-primary px-4">
+            <i class="fas fa-clipboard-list me-2"></i>View All Orders
+        </a>
+        <a href="{{ url_for('medicines') }}" class="btn btn-outline-primary px-4">
+            <i class="fas fa-pills me-2"></i>Continue Shopping
+        </a>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary px-4">
+            <i class="fas fa-home me-2"></i>Go to Dashboard
+        </a>
+    </div>
+
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="fas fa-exclamation-circle fa-3x mb-3 opacity-25"></i>
+            <h5>Order not found</h5>
+            <a href="{{ url_for('orders') }}" class="btn btn-primary mt-2">View My Orders</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

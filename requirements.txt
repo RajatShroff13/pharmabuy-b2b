@@ -1,0 +1,8 @@
+# PharmaBuy B2B - Python dependencies
+# Install with:  pip install -r requirements.txt
+
+Flask>=3.0,<4.0
+Werkzeug>=3.0,<4.0
+pyodbc>=5.0,<6.0          # SQL Server driver (needs "ODBC Driver 17 for SQL Server")
+python-dotenv>=1.0,<2.0  # loads .env into the environment
+requests>=2.31,<3.0      # optional: posts invoices to the n8n webhook

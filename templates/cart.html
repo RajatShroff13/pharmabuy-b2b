@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Shopping cart — PharmaBuy B2B{% endblock %}
+{% block meta_description %}Review the medicines in your PharmaBuy B2B cart, adjust quantities and see the GST-inclusive total before checkout.{% endblock %}
+
+{% block content %}
+<div class="container mb-5">
+    <div class="page-head">
+        <div>
+            <h1><i class="fas fa-cart-shopping me-2 text-success"></i>Shopping cart</h1>
+            <p>{{ count }} item{{ '' if count == 1 else 's' }} ready for checkout</p>
+        </div>
+        <a href="{{ url_for('medicines') }}" class="btn btn-outline-primary">
+            <i class="fas fa-plus me-1"></i>Add more items
+        </a>
+    </div>
+
+    {% if cart_items %}
+    <div class="row g-4">
+        <!-- Line items -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span class="card-title">Order items</span>
+                    <span class="text-muted small">{{ count }} product{{ '' if count == 1 else 's' }}</span>
+                </div>
+                <div class="card-body p-0">
+                    {% for item in cart_items %}
+                    <div class="p-4 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-5">
+                                <h6 class="fw-bold mb-1" style="color:var(--brand-800);">{{ item.name }}</h6>
+                                <div class="text-muted small">
+                                    {{ item.brand or 'Generic' }} &bull; Batch {{ item.batch_no }}
+                                </div>
+                                {% if item.gst_percent > 0 %}
+                                <div class="text-muted small">GST {{ item.gst_percent }}%</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-4 col-md-2 text-md-center">
+                                <div class="text-muted small">Unit price</div>
+                                <div class="fw-semibold">₹{{ "%.2f"|format(item.price) }}</div>
+                            </div>
+                            <div class="col-4 col-md-2">
+                                <form method="POST" action="{{ url_for('update_cart') }}">
+                                    <label class="visually-hidden" for="qty-{{ item.batch_id }}">Quantity</label>
+                                    <input type="hidden" name="batch_id" value="{{ item.batch_id }}">
+                                    <input type="number" id="qty-{{ item.batch_id }}" name="quantity"
+                                           value="{{ item.quantity }}" min="0" max="{{ item.stock_qty }}"
+                                           class="form-control form-control-sm text-center"
+                                           onchange="this.form.submit()">
+                                </form>
+                            </div>
+                            <div class="col-4 col-md-2 text-end">
+                                <div class="text-muted small">Line total</div>
+                                <div class="fw-bold text-success">₹{{ "%.2f"|format(item.total) }}</div>
+                                {% if item.gst_amount > 0 %}
+                                <div class="text-muted" style="font-size:0.72rem;">
+                                    incl. ₹{{ "%.2f"|format(item.gst_amount) }} GST
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-1 text-end">
+                                <a href="{{ url_for('remove_from_cart', batch_id=item.batch_id) }}"
+                                   class="btn btn-sm btn-outline-secondary"
+                                   data-confirm="Remove {{ item.name }} from your cart?"
+                                   aria-label="Remove {{ item.name }}">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="col-lg-4">
+            <div class="card" style="position: sticky; top: 90px;">
+                <div class="card-header">
+                    <span class="card-title"><i class="fas fa-receipt me-2 text-success"></i>Order summary</span>
+                </div>
+                <div class="card-body">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span>₹{{ "%.2f"|format(subtotal) }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>GST</span>
+                        <span>₹{{ "%.2f"|format(gst) }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Delivery</span>
+                        <span class="text-success fw-semibold">Free</span>
+                    </div>
+                    <div class="summary-total">
+                        <span>Total payable</span>
+                        <span class="amount">₹{{ "%.2f"|format(total) }}</span>
+                    </div>
+                    <a href="{{ url_for('checkout') }}" class="btn btn-success w-100 py-2 mt-3">
+                        <i class="fas fa-lock me-2"></i>Proceed to checkout
+                    </a>
+                    <a href="{{ url_for('medicines') }}" class="btn btn-outline-secondary w-100 mt-2">
+                        <i class="fas fa-arrow-left me-1"></i>Continue shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="card">
+        <div class="card-body empty-state">
+            <i class="fas fa-cart-shopping"></i>
+            <h5>Your cart is empty</h5>
+            <p>Browse the catalog and add medicines to place your first order.</p>
+            <a href="{{ url_for('medicines') }}" class="btn btn-primary">
+                <i class="fas fa-pills me-2"></i>Browse medicines
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

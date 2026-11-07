@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block title %}{{ medicine[1] }} - PharmaBuy B2B{% endblock %}
+
+{% block content %}
+<div class="container mb-5">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('medicines') }}">Medicines</a></li>
+            <li class="breadcrumb-item active">{{ medicine[1] }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Medicine Info Card -->
+        <div class="col-md-5">
+            <div class="card h-100">
+                <div class="card-body p-4">
+                    <span class="badge mb-2" style="background:#e8f4fd; color:#1a3c5e; font-size:0.8rem;">{{ medicine[3] }}</span>
+                    <h3 class="fw-bold" style="color:#1a3c5e;">{{ medicine[1] }}</h3>
+                    <p class="text-muted fw-semibold mb-3">{{ medicine[2] or 'Generic Brand' }}</p>
+
+                    {% if medicine[4] %}
+                    <div class="mb-3">
+                        <h6 class="fw-bold text-secondary small text-uppercase">Description</h6>
+                        <p class="text-muted">{{ medicine[4] }}</p>
+                    </div>
+                    {% endif %}
+
+                    <hr>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="p-2 rounded" style="background:#f4f7fb;">
+                                <div class="small text-muted">MRP</div>
+                                <div class="fw-bold" style="color:#1a3c5e;">₹{{ "%.2f"|format(medicine[5]) }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded" style="background:#f0fff4;">
+                                <div class="small text-muted">GST</div>
+                                <div class="fw-bold text-success">{{ medicine[6] }}%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batches / Add to Cart -->
+        <div class="col-md-7">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0 fw-bold text-primary"><i class="fas fa-box me-2"></i>Available Batches</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if batches %}
+                    {% for batch in batches %}
+                    <div class="p-4 {% if not loop.last %}border-bottom{% endif %}">
+                        <div class="row align-items-center g-3">
+                            <div class="col-md-7">
+                                <div class="d-flex flex-wrap gap-3 mb-2">
+                                    <div>
+                                        <div class="small text-muted">Batch No.</div>
+                                        <div class="fw-bold">{{ batch[1] }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="small text-muted">Expiry</div>
+                                        <div class="fw-bold text-warning">{{ batch[3].strftime('%b %Y') if batch[3] else '-' }}</div>
+                                    </div>
+                                    <div>
+                                        <div class="small text-muted">Stock</div>
+                                        {% if batch[5] > 50 %}
+                                            <span class="badge bg-success">{{ batch[5] }} units</span>
+                                        {% elif batch[5] > 0 %}
+                                            <span class="badge bg-warning text-dark">{{ batch[5] }} units</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if batch[6] %}
+                                    <div>
+                                        <div class="small text-muted">Rack</div>
+                                        <div class="fw-bold">{{ batch[6] }}</div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="fs-4 fw-bold" style="color:#2ecc71;">
+                                    ₹{{ "%.2f"|format(batch[4]) }}
+                                    <span class="fs-6 text-muted fw-normal">/ unit</span>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <form method="POST" action="{{ url_for('add_to_cart') }}">
+                                    <input type="hidden" name="batch_id" value="{{ batch[0] }}">
+                                    <div class="input-group">
+                                        <input type="number" name="quantity" class="form-control text-center"
+                                               value="1" min="1" max="{{ batch[5] }}"
+                                               style="border-radius: 8px 0 0 8px;">
+                                        <button type="submit" class="btn btn-success" style="border-radius:0 8px 8px 0;">
+                                            <i class="fas fa-cart-plus me-1"></i>Add
+                                        </button>
+                                    </div>
+                                    <div class="text-muted small mt-1">Max: {{ batch[5] }} units</div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fas fa-box-open fa-3x mb-3 opacity-25"></i>
+                        <p>No batches available currently.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <a href="{{ url_for('medicines') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Medicines
+                </a>
+                <a href="{{ url_for('cart') }}" class="btn btn-primary">
+                    <i class="fas fa-shopping-cart me-1"></i>View Cart
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

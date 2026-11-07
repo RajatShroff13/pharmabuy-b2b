@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}Checkout — PharmaBuy B2B{% endblock %}
+{% block meta_description %}Enter delivery details and choose a payment method to complete your PharmaBuy B2B order.{% endblock %}
+
+{% block content %}
+<div class="container mb-5">
+    <div class="page-head">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{{ url_for('cart') }}" class="btn btn-outline-secondary btn-sm" aria-label="Back to cart">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1>Checkout</h1>
+                <p>Confirm delivery details and payment method</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Steps -->
+    <div class="card mb-4">
+        <div class="card-body py-3">
+            <div class="d-flex justify-content-center align-items-center gap-3 gap-md-4">
+                <div class="text-center">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1"
+                         style="width:32px;height:32px;background:var(--accent-500);color:#fff;font-size:0.85rem;">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <div class="small text-success fw-semibold">Cart</div>
+                </div>
+                <div style="height:2px;width:50px;background:var(--accent-500);"></div>
+                <div class="text-center">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1"
+                         style="width:32px;height:32px;background:var(--brand-700);color:#fff;font-size:0.85rem;">2</div>
+                    <div class="small fw-semibold" style="color:var(--brand-700);">Details</div>
+                </div>
+                <div style="height:2px;width:50px;background:var(--border-strong);"></div>
+                <div class="text-center">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-1"
+                         style="width:32px;height:32px;background:var(--border);color:var(--text-muted);font-size:0.85rem;">3</div>
+                    <div class="small text-muted">Confirm</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('checkout') }}">
+        <div class="row g-4">
+
+            <!-- Customer + payment -->
+            <div class="col-lg-7">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <span class="card-title"><i class="fas fa-user me-2 text-success"></i>Customer information</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label" for="customer_name">Business / customer name <span class="text-danger">*</span></label>
+                            <input type="text" id="customer_name" name="customer_name" class="form-control"
+                                   placeholder="Your pharmacy or business name" required>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label" for="phone">Phone number <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                    <input type="tel" id="phone" name="phone" class="form-control"
+                                           placeholder="10-digit mobile number" maxlength="15" required>
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label class="form-label" for="email">Email address <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                                    <input type="email" id="email" name="email" class="form-control"
+                                           placeholder="customer@email.com" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-text mb-3">
+                            Existing customers are matched by phone number; the invoice email is attached to the order.
+                        </div>
+
+                        <div class="mb-0">
+                            <label class="form-label" for="address">Delivery address <span class="text-danger">*</span></label>
+                            <textarea id="address" name="address" class="form-control" rows="3"
+                                      placeholder="Full delivery address" required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title"><i class="fas fa-credit-card me-2 text-success"></i>Payment method</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            {% set methods = [
+                                ('CASH', 'Cash', 'fa-money-bill-wave', 'text-success'),
+                                ('UPI', 'UPI', 'fa-mobile-screen-button', 'text-primary'),
+                                ('CARD', 'Card', 'fa-credit-card', 'text-info'),
+                                ('NET_BANKING', 'Net banking', 'fa-building-columns', 'text-warning'),
+                                ('CHEQUE', 'Cheque', 'fa-file-invoice', 'text-secondary')
+                            ] %}
+                            {% for value, label, icon, color in methods %}
+                            <div class="col-6 col-md-4">
+                                <label class="w-100" style="cursor:pointer;">
+                                    <input type="radio" name="payment_mode" value="{{ value }}" class="visually-hidden"
+                                           {% if loop.first %}checked{% endif %}>
+                                    <span class="payment-option">
+                                        <i class="fas {{ icon }} fa-2x {{ color }} d-block mb-2"></i>
+                                        <span class="fw-semibold small">{{ label }}</span>
+                                    </span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order summary -->
+            <div class="col-lg-5">
+                <div class="card" style="position: sticky; top: 90px;">
+                    <div class="card-header">
+                        <span class="card-title"><i class="fas fa-receipt me-2 text-success"></i>Order summary</span>
+                    </div>
+                    <div class="card-body">
+                        <div style="max-height: 220px; overflow-y: auto;">
+                            {% for item in cart_items %}
+                            <div class="summary-row">
+                                <span>{{ item.name }} &times;{{ item.quantity }}</span>
+                                <span class="text-dark fw-semibold">₹{{ "%.2f"|format(item.subtotal) }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="summary-row mt-2">
+                            <span>Subtotal</span>
+                            <span>₹{{ "%.2f"|format(subtotal) }}</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>GST</span>
+                            <span>₹{{ "%.2f"|format(gst) }}</span>
+                        </div>
+                        <div class="summary-total">
+                            <span>Total payable</span>
+                            <span class="amount">₹{{ "%.2f"|format(total) }}</span>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 py-2 mt-3">
+                            <i class="fas fa-check-circle me-2"></i>Place order
+                        </button>
+                        <a href="{{ url_for('cart') }}" class="btn btn-outline-secondary w-100 mt-2">
+                            <i class="fas fa-arrow-left me-1"></i>Back to cart
+                        </a>
+                        <p class="form-text mt-3 mb-0">
+                            <i class="fas fa-circle-info me-1"></i>
+                            Stock is deducted and the sale is logged when you place the order.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

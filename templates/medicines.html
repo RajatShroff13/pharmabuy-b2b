@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Medicine catalog — PharmaBuy B2B{% endblock %}
+{% block meta_description %}Browse the PharmaBuy B2B medicine catalog: search by name or brand, filter by therapeutic category and check live batch stock and pricing.{% endblock %}
+
+{% block content %}
+<div class="container mb-5">
+    <div class="page-head">
+        <div>
+            <h1><i class="fas fa-pills me-2 text-success"></i>Medicine catalog</h1>
+            <p>Browse and order pharmaceutical products by category</p>
+        </div>
+        <a href="{{ url_for('cart') }}" class="btn btn-success">
+            <i class="fas fa-cart-shopping me-2"></i>View cart
+            {% if session.get('cart') %}<span class="badge bg-white text-success ms-1">{{ session.cart|length }}</span>{% endif %}
+        </a>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="card filter-card mb-4">
+        <div class="card-body py-3">
+            <form method="GET" action="{{ url_for('medicines') }}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <label class="form-label small fw-semibold text-muted mb-1">SEARCH</label>
+                        <div class="input-group">
+                            <input type="search" name="search" class="form-control"
+                                   placeholder="Search medicine or brand name..."
+                                   aria-label="Search medicines"
+                                   value="{{ search_query }}">
+                            <button class="btn btn-primary" type="submit" aria-label="Search">
+                                <i class="fas fa-magnifying-glass"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold text-muted mb-1">CATEGORY</label>
+                        <select name="category" class="form-select" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {% if cat == selected_category %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        {% if search_query or selected_category %}
+                        <a href="{{ url_for('medicines') }}" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-times me-1"></i>Clear Filters
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Count -->
+    <p class="text-muted mb-3">
+        <i class="fas fa-list me-1"></i>
+        Showing <strong>{{ medicines|length }}</strong> medicine(s)
+        {% if selected_category %}in <strong>{{ selected_category }}</strong>{% endif %}
+        {% if search_query %}matching "<strong>{{ search_query }}</strong>"{% endif %}
+    </p>
+
+    <!-- Medicines Grid -->
+    {% if medicines %}
+    <div class="row g-3">
+        {% for med in medicines %}
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+            <div class="card medicine-card h-100" onclick="window.location='{{ url_for('medicine_detail', medicine_id=med[0]) }}'">
+                <div class="card-body d-flex flex-column p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="category-badge">{{ med[3] }}</span>
+                        {% if med[9] and med[9] > 50 %}
+                            <span class="badge bg-success">In stock</span>
+                        {% elif med[9] and med[9] > 0 %}
+                            <span class="badge bg-warning text-dark">Low stock</span>
+                        {% else %}
+                            <span class="badge bg-danger">Out of stock</span>
+                        {% endif %}
+                    </div>
+                    <h6 class="fw-bold mb-1" style="color:#1a3c5e; font-size:0.95rem;">{{ med[1] }}</h6>
+                    <p class="text-muted mb-2" style="font-size:0.82rem;">{{ med[2] or 'Generic' }}</p>
+                    {% if med[4] %}
+                    <p class="text-muted mb-2" style="font-size:0.8rem; flex-grow:1;">{{ med[4][:60] }}{% if med[4] and med[4]|length > 60 %}...{% endif %}</p>
+                    {% endif %}
+                    <div class="mt-auto">
+                        <div class="d-flex align-items-baseline gap-2 mb-2">
+                            {% if med[8] %}
+                            <span class="price-tag">₹{{ "%.2f"|format(med[8]) }}</span>
+                            <span class="mrp-tag">MRP ₹{{ "%.2f"|format(med[5]) }}</span>
+                            {% else %}
+                            <span class="text-muted small fw-semibold">Currently unavailable</span>
+                            {% endif %}
+                        </div>
+                        {% if med[6] and med[6] > 0 %}
+                        <small class="text-muted">GST: {{ med[6] }}%</small>
+                        {% endif %}
+                        <div class="d-grid mt-2">
+                            <a href="{{ url_for('medicine_detail', medicine_id=med[0]) }}"
+                               class="btn btn-sm btn-primary" onclick="event.stopPropagation()">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5 text-muted">
+            <i class="fas fa-search fa-3x mb-3 opacity-25"></i>
+            <h5>No medicines found</h5>
+            <p>Try a different search term or category.</p>
+            <a href="{{ url_for('medicines') }}" class="btn btn-outline-primary">View All Medicines</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
